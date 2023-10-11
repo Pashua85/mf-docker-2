@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+  frontend-shell:
+    build: ./frontend-shell-2
+    container_name: modulefed-frontend-shell
+    # command: serve -s build -l 3000
+    command: npm run start
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    # stdin_open: true
+    # tty: true
+    # volumes:
+    #   - ./frontend/src:/usr/src/app/src
+    depends_on:
+      - frontend-admin
+      - frontend-main
+    networks:
+      - modulefed-network
+
+  frontend-admin:
+    build: ./frontend-admin-2
+    container_name: modulefed-frontend-admin
+    # command: serve -s build -l 4001
+    command: npm run start
+    ports:
+      - "4001:4001"
+    restart: unless-stopped
+    networks:
+      - modulefed-network
+
+  frontend-main:
+    build: ./frontend-main-2
+    container_name: modulefed-frontend-main
+    command: npm run start
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+    networks:
+      - modulefed-network
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: modulefed-docker-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend-shell
+      - frontend-admin
+      - frontend-main
+    networks:
+      - modulefed-network
+
+networks:
+  modulefed-network:
+    driver: bridge
+
